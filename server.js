@@ -1,6 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./db');
+const webpush = require('web-push');
+
+webpush.setVapidDetails(
+    'mailto:valeryariza2001@gmail.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
 
 const app = express();
 app.use(cors());
@@ -56,6 +63,69 @@ app.delete('/api/recordatorios/:id', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// GET - Obtener la clave pública VAPID (el frontend la necesita)
+app.get('/api/vapid-public-key', (req, res) => {
+    res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+});
+
+// POST - Guardar una nueva suscripción push
+app.post('/api/suscripciones', async (req, res) => {
+    try {
+        const { endpoint, keys } = req.body;
+        await db.query(
+            'INSERT INTO suscripciones (endpoint, p256dh, auth) VALUES (?, ?, ?)',
+            [endpoint, keys.p256dh, keys.auth]
+        );
+        res.status(201).json({ message: 'Suscripcion guardada' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Función para enviar notificaciones push a todos los suscritos
+async function enviarNotificacionATodos(payload) {
+    const [suscripciones] = await db.query('SELECT * FROM suscripciones');
+
+    for (const sub of suscripciones) {
+        const pushSubscription = {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth }
+        };
+
+        try {
+            await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+        } catch (error) {
+            console.log('Suscripcion invalida, eliminando:', sub.id);
+            await db.query('DELETE FROM suscripciones WHERE id = ?', [sub.id]);
+        }
+    }
+}
+
+// Revisar recordatorios cada 30 segundos y enviar push si corresponde
+setInterval(async () => {
+    try {
+        const [recordatorios] = await db.query(
+            'SELECT * FROM recordatorios WHERE completado = FALSE'
+        );
+        const ahora = new Date();
+
+        for (const r of recordatorios) {
+            const fechaRecordatorio = new Date(r.fecha_hora);
+            const diferencia = fechaRecordatorio - ahora;
+
+            // Si está entre 0 y 60 segundos de diferencia (recién llegó la hora)
+            if (diferencia <= 0 && diferencia > -60000) {
+                await enviarNotificacionATodos({
+                    title: '⏰ Recordatorio',
+                    body: r.titulo
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error revisando recordatorios:', error);
+    }
+}, 30000);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

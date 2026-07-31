@@ -65,48 +65,50 @@ async function borrarRecordatorio(id) {
 
 cargarRecordatorios();
 
-// ===== NOTIFICACIONES =====
+// ===== NOTIFICACIONES PUSH (funcionan en iPhone tambien) =====
 
-// Pedir permiso al cargar la página
-if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-}
+async function registrarServiceWorker() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('Push no soportado en este navegador');
+        return;
+    }
 
-// Guardamos en el navegador los IDs que ya notificamos, para no repetir
-function getNotificados() {
-    return JSON.parse(localStorage.getItem('notificados') || '[]');
-}
+    try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
 
-function marcarComoNotificado(id) {
-    const notificados = getNotificados();
-    notificados.push(id);
-    localStorage.setItem('notificados', JSON.stringify(notificados));
-}
-
-async function revisarRecordatorios() {
-    if (Notification.permission !== 'granted') return;
-
-    const res = await fetch(API_URL);
-    const recordatorios = await res.json();
-    const notificados = getNotificados();
-    const ahora = new Date();
-
-    recordatorios.forEach(r => {
-        const fechaRecordatorio = new Date(r.fecha_hora);
-        const yaNotificado = notificados.includes(r.id);
-        const yaPaso = fechaRecordatorio <= ahora;
-        const faltaPoco = fechaRecordatorio - ahora <= 60000; // 1 minuto antes
-
-        if (!r.completado && !yaNotificado && (yaPaso || faltaPoco)) {
-            new Notification('⏰ Recordatorio', {
-                body: r.titulo,
-                icon: '📌'
-            });
-            marcarComoNotificado(r.id);
+        const permiso = await Notification.requestPermission();
+        if (permiso !== 'granted') {
+            console.log('Permiso de notificaciones denegado');
+            return;
         }
-    });
+
+        // Traer la clave publica VAPID del servidor
+        const res = await fetch('/api/vapid-public-key');
+        const { publicKey } = await res.json();
+
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+
+        // Enviar la suscripcion al backend para guardarla
+        await fetch('/api/suscripciones', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(subscription)
+        });
+
+        console.log('Suscripcion push registrada correctamente');
+    } catch (error) {
+        console.error('Error registrando push:', error);
+    }
 }
 
-// Revisar cada 30 segundos
-setInterval(revisarRecordatorios, 30000);
-revisarRecordatorios(); // revisar también apenas carga
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+registrarServiceWorker();
