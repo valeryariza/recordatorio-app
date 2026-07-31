@@ -67,19 +67,32 @@ cargarRecordatorios();
 
 // ===== NOTIFICACIONES PUSH (funcionan en iPhone tambien) =====
 
-async function registrarServiceWorker() {
+// Registrar el Service Worker apenas carga la pagina (esto SI se puede
+// hacer sin interaccion del usuario, no pide permiso todavia)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('Error registrando SW:', err));
+}
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+async function activarNotificaciones() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        console.log('Push no soportado en este navegador');
-        return;
+        alert('Este navegador no soporta notificaciones push');
+        return false;
     }
 
     try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
+        const registration = await navigator.serviceWorker.ready;
 
         const permiso = await Notification.requestPermission();
         if (permiso !== 'granted') {
-            console.log('Permiso de notificaciones denegado');
-            return;
+            alert('No se concedio el permiso de notificaciones');
+            return false;
         }
 
         // Traer la clave publica VAPID del servidor
@@ -99,16 +112,26 @@ async function registrarServiceWorker() {
         });
 
         console.log('Suscripcion push registrada correctamente');
+        return true;
     } catch (error) {
         console.error('Error registrando push:', error);
+        alert('Hubo un error activando las notificaciones: ' + error.message);
+        return false;
     }
 }
 
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = atob(base64);
-    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+// Conectar el boton "Activar notificaciones" (el permiso solo se puede
+// pedir en iPhone si viene de un toque directo del usuario en un boton)
+const btnActivar = document.getElementById('btnActivarNotificaciones');
+if (btnActivar) {
+    btnActivar.addEventListener('click', async () => {
+        btnActivar.textContent = 'Activando...';
+        const exito = await activarNotificaciones();
+        if (exito) {
+            btnActivar.textContent = '✅ Notificaciones activadas';
+            btnActivar.disabled = true;
+        } else {
+            btnActivar.textContent = '🔔 Activar notificaciones';
+        }
+    });
 }
-
-registrarServiceWorker();
