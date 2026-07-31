@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Recordatorios</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📌 Mis Recordatorios</h1>
+
+        <form id="formRecordatorio">
+            <input type="text" id="titulo" placeholder="Título" required>
+            <textarea id="descripcion" placeholder="Descripción (opcional)"></textarea>
+            <input type="datetime-local" id="fecha_hora" required>
+            <button type="submit">Agregar recordatorio</button>
+        </form>
+
+        <ul id="listaRecordatorios"></ul>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

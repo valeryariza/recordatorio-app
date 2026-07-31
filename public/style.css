@@ -1,0 +1,102 @@
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f2f2f2;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 500px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+input, textarea, button {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #45a049;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+li h3 {
+    margin: 0 0 5px 0;
+}
+
+li p {
+    margin: 0 0 5px 0;
+    color: #555;
+    font-size: 14px;
+}
+
+li small {
+    color: #888;
+}
+
+.completado {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.acciones {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+}
+
+.acciones button {
+    flex: 1;
+    font-size: 12px;
+    padding: 6px;
+}
+
+.btn-borrar {
+    background: #e74c3c;
+}
+
+.btn-borrar:hover {
+    background: #c0392b;
+}
