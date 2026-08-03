@@ -26,13 +26,14 @@ app.get('/api/recordatorios', async (req, res) => {
 });
 
 // POST - Crear un recordatorio
-app.post('/api/recordatorios', async (req, res) => {
+app.put('/api/recordatorios/:id', async (req, res) => {
     try {
-        const { titulo, descripcion, fecha_hora } = req.body;
-        console.log('POST recibido:', { titulo, descripcion, fecha_hora });
-        const [result] = await db.query(
-            'INSERT INTO recordatorios (titulo, descripcion, fecha_hora) VALUES (?, ?, ?)',
-            [titulo, descripcion, fecha_hora]
+        const { id } = req.params;
+        const { titulo, descripcion, fecha_hora, completado } = req.body;
+        const fechaHoraSQL = new Date(fecha_hora);
+        await db.query(
+            'UPDATE recordatorios SET titulo=?, descripcion=?, fecha_hora=?, completado=? WHERE id=?',
+            [titulo, descripcion, fechaHoraSQL, completado, id]
         );
         res.json({ id: result.insertId, titulo, descripcion, fecha_hora });
     } catch (error) {
