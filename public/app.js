@@ -31,8 +31,9 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const titulo = document.getElementById('titulo').value;
-    const descripcion = document.getElementById('descripcion').value;
-    const fecha_hora = document.getElementById('fecha_hora').value;
+const descripcion = document.getElementById('descripcion').value;
+const fecha_hora_local = document.getElementById('fecha_hora').value;
+const fecha_hora = new Date(fecha_hora_local).toISOString();
 
     await fetch(API_URL, {
         method: 'POST',
