@@ -65,8 +65,14 @@ app.delete('/api/recordatorios/:id', async (req, res) => {
 });
 
 // GET - Obtener la clave pública VAPID (el frontend la necesita)
-app.get('/api/vapid-public-key', (req, res) => {
-    res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+app.get('/api/recordatorios', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM recordatorios ORDER BY fecha_hora ASC');
+        res.json(rows);
+    } catch (error) {
+        console.error('ERROR en GET /api/recordatorios:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // POST - Guardar una nueva suscripción push
