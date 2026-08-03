@@ -76,15 +76,17 @@ app.get('/api/recordatorios', async (req, res) => {
 });
 
 // POST - Guardar una nueva suscripción push
-app.post('/api/suscripciones', async (req, res) => {
+app.post('/api/recordatorios', async (req, res) => {
     try {
-        const { endpoint, keys } = req.body;
-        await db.query(
-            'INSERT INTO suscripciones (endpoint, p256dh, auth) VALUES (?, ?, ?)',
-            [endpoint, keys.p256dh, keys.auth]
+        const { titulo, descripcion, fecha_hora } = req.body;
+        console.log('POST recibido:', { titulo, descripcion, fecha_hora });
+        const [result] = await db.query(
+            'INSERT INTO recordatorios (titulo, descripcion, fecha_hora) VALUES (?, ?, ?)',
+            [titulo, descripcion, fecha_hora]
         );
-        res.status(201).json({ message: 'Suscripcion guardada' });
+        res.json({ id: result.insertId, titulo, descripcion, fecha_hora });
     } catch (error) {
+        console.error('ERROR en POST /api/recordatorios:', error);
         res.status(500).json({ error: error.message });
     }
 });
