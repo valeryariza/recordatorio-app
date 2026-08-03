@@ -20,62 +20,12 @@ app.get('/api/recordatorios', async (req, res) => {
         const [rows] = await db.query('SELECT * FROM recordatorios ORDER BY fecha_hora ASC');
         res.json(rows);
     } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// POST - Crear un recordatorio
-app.post('/api/recordatorios', async (req, res) => {
-    try {
-        const { titulo, descripcion, fecha_hora } = req.body;
-        const [result] = await db.query(
-            'INSERT INTO recordatorios (titulo, descripcion, fecha_hora) VALUES (?, ?, ?)',
-            [titulo, descripcion, fecha_hora]
-        );
-        res.json({ id: result.insertId, titulo, descripcion, fecha_hora });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// PUT - Marcar como completado / editar
-app.put('/api/recordatorios/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { titulo, descripcion, fecha_hora, completado } = req.body;
-        await db.query(
-            'UPDATE recordatorios SET titulo=?, descripcion=?, fecha_hora=?, completado=? WHERE id=?',
-            [titulo, descripcion, fecha_hora, completado, id]
-        );
-        res.json({ message: 'Actualizado correctamente' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// DELETE - Borrar un recordatorio
-app.delete('/api/recordatorios/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.query('DELETE FROM recordatorios WHERE id=?', [id]);
-        res.json({ message: 'Eliminado correctamente' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// GET - Obtener la clave pública VAPID (el frontend la necesita)
-app.get('/api/recordatorios', async (req, res) => {
-    try {
-        const [rows] = await db.query('SELECT * FROM recordatorios ORDER BY fecha_hora ASC');
-        res.json(rows);
-    } catch (error) {
         console.error('ERROR en GET /api/recordatorios:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// POST - Guardar una nueva suscripción push
+// POST - Crear un recordatorio
 app.post('/api/recordatorios', async (req, res) => {
     try {
         const { titulo, descripcion, fecha_hora } = req.body;
@@ -91,6 +41,54 @@ app.post('/api/recordatorios', async (req, res) => {
     }
 });
 
+// PUT - Marcar como completado / editar
+app.put('/api/recordatorios/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { titulo, descripcion, fecha_hora, completado } = req.body;
+        await db.query(
+            'UPDATE recordatorios SET titulo=?, descripcion=?, fecha_hora=?, completado=? WHERE id=?',
+            [titulo, descripcion, fecha_hora, completado, id]
+        );
+        res.json({ message: 'Actualizado correctamente' });
+    } catch (error) {
+        console.error('ERROR en PUT /api/recordatorios/:id:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DELETE - Borrar un recordatorio
+app.delete('/api/recordatorios/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM recordatorios WHERE id=?', [id]);
+        res.json({ message: 'Eliminado correctamente' });
+    } catch (error) {
+        console.error('ERROR en DELETE /api/recordatorios/:id:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET - Obtener la clave pública VAPID (el frontend la necesita)
+app.get('/api/vapid-public-key', (req, res) => {
+    res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+});
+
+// POST - Guardar una nueva suscripción push
+app.post('/api/suscripciones', async (req, res) => {
+    try {
+        const { endpoint, keys } = req.body;
+        await db.query(
+            'INSERT INTO suscripciones (endpoint, p256dh, auth) VALUES (?, ?, ?)',
+            [endpoint, keys.p256dh, keys.auth]
+        );
+        res.status(201).json({ message: 'Suscripcion guardada' });
+    } catch (error) {
+        console.error('ERROR en POST /api/suscripciones:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Función para enviar notificaciones push a todos los suscritos
 async function enviarNotificacionATodos(payload) {
     const [suscripciones] = await db.query('SELECT * FROM suscripciones');
@@ -102,7 +100,7 @@ async function enviarNotificacionATodos(payload) {
             keys: { p256dh: sub.p256dh, auth: sub.auth }
         };
 
-       try {
+        try {
             await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
             console.log(`Push enviado correctamente a suscripcion ${sub.id}`);
         } catch (error) {
