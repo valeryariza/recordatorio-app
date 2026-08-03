@@ -86,6 +86,7 @@ app.post('/api/suscripciones', async (req, res) => {
 // Función para enviar notificaciones push a todos los suscritos
 async function enviarNotificacionATodos(payload) {
     const [suscripciones] = await db.query('SELECT * FROM suscripciones');
+    console.log(`Intentando enviar push a ${suscripciones.length} suscripciones`);
 
     for (const sub of suscripciones) {
         const pushSubscription = {
@@ -93,10 +94,11 @@ async function enviarNotificacionATodos(payload) {
             keys: { p256dh: sub.p256dh, auth: sub.auth }
         };
 
-        try {
+       try {
             await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+            console.log(`Push enviado correctamente a suscripcion ${sub.id}`);
         } catch (error) {
-            console.log('Suscripcion invalida, eliminando:', sub.id);
+            console.log(`ERROR enviando push a suscripcion ${sub.id}:`, error.message, error.statusCode);
             await db.query('DELETE FROM suscripciones WHERE id = ?', [sub.id]);
         }
     }
@@ -105,6 +107,7 @@ async function enviarNotificacionATodos(payload) {
 // Revisar recordatorios cada 30 segundos y enviar push si corresponde
 setInterval(async () => {
     try {
+        console.log('Revisando recordatorios...', new Date().toISOString());
         const [recordatorios] = await db.query(
             'SELECT * FROM recordatorios WHERE completado = FALSE'
         );
