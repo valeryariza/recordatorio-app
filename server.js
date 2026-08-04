@@ -26,14 +26,14 @@ app.get('/api/recordatorios', async (req, res) => {
 });
 
 // POST - Crear un recordatorio
-app.put('/api/recordatorios/:id', async (req, res) => {
+app.post('/api/recordatorios', async (req, res) => {
     try {
-        const { id } = req.params;
-        const { titulo, descripcion, fecha_hora, completado } = req.body;
+        const { titulo, descripcion, fecha_hora } = req.body;
+        console.log('POST recibido:', { titulo, descripcion, fecha_hora });
         const fechaHoraSQL = new Date(fecha_hora);
-        await db.query(
-            'UPDATE recordatorios SET titulo=?, descripcion=?, fecha_hora=?, completado=? WHERE id=?',
-            [titulo, descripcion, fechaHoraSQL, completado, id]
+        const [result] = await db.query(
+            'INSERT INTO recordatorios (titulo, descripcion, fecha_hora) VALUES (?, ?, ?)',
+            [titulo, descripcion, fechaHoraSQL]
         );
         res.json({ id: result.insertId, titulo, descripcion, fecha_hora });
     } catch (error) {
@@ -47,9 +47,10 @@ app.put('/api/recordatorios/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { titulo, descripcion, fecha_hora, completado } = req.body;
+        const fechaHoraSQL = new Date(fecha_hora);
         await db.query(
             'UPDATE recordatorios SET titulo=?, descripcion=?, fecha_hora=?, completado=? WHERE id=?',
-            [titulo, descripcion, fecha_hora, completado, id]
+            [titulo, descripcion, fechaHoraSQL, completado, id]
         );
         res.json({ message: 'Actualizado correctamente' });
     } catch (error) {
@@ -124,7 +125,6 @@ setInterval(async () => {
             const fechaRecordatorio = new Date(r.fecha_hora);
             const diferencia = fechaRecordatorio - ahora;
 
-            // Si está entre 0 y 60 segundos de diferencia (recién llegó la hora)
             if (diferencia <= 0 && diferencia > -60000) {
                 await enviarNotificacionATodos({
                     title: '⏰ Recordatorio',
