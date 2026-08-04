@@ -31,18 +31,28 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const titulo = document.getElementById('titulo').value;
-const descripcion = document.getElementById('descripcion').value;
-const fecha_hora_local = document.getElementById('fecha_hora').value;
-const fecha_hora = new Date(fecha_hora_local).toISOString();
+    const descripcion = document.getElementById('descripcion').value;
+    const fecha_hora_local = document.getElementById('fecha_hora').value;
+    const fecha_hora = new Date(fecha_hora_local).toISOString();
 
-    await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo, descripcion, fecha_hora })
-    });
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titulo, descripcion, fecha_hora })
+        });
 
-    form.reset();
-    cargarRecordatorios();
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            alert('Error al guardar: ' + (errorData.error || `Codigo ${res.status}`));
+            return; // no limpiar el formulario si hubo error
+        }
+
+        form.reset();
+        cargarRecordatorios();
+    } catch (error) {
+        alert('Error de conexion: ' + error.message);
+    }
 });
 
 async function marcarCompletado(id, nuevoEstado) {
@@ -68,8 +78,6 @@ cargarRecordatorios();
 
 // ===== NOTIFICACIONES PUSH (funcionan en iPhone tambien) =====
 
-// Registrar el Service Worker apenas carga la pagina (esto SI se puede
-// hacer sin interaccion del usuario, no pide permiso todavia)
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(err => console.log('Error registrando SW:', err));
 }
@@ -96,7 +104,6 @@ async function activarNotificaciones() {
             return false;
         }
 
-        // Traer la clave publica VAPID del servidor
         const res = await fetch('/api/vapid-public-key');
         const { publicKey } = await res.json();
 
@@ -105,7 +112,6 @@ async function activarNotificaciones() {
             applicationServerKey: urlBase64ToUint8Array(publicKey)
         });
 
-        // Enviar la suscripcion al backend para guardarla
         await fetch('/api/suscripciones', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -121,8 +127,6 @@ async function activarNotificaciones() {
     }
 }
 
-// Conectar el boton "Activar notificaciones" (el permiso solo se puede
-// pedir en iPhone si viene de un toque directo del usuario en un boton)
 const btnActivar = document.getElementById('btnActivarNotificaciones');
 if (btnActivar) {
     btnActivar.addEventListener('click', async () => {
