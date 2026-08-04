@@ -1,88 +1,295 @@
+:root {
+    --rosa: #F6D9D3;
+    --lavanda-fondo: #DDE3FB;
+    --menta: #A9DDC9;
+    --sage: #C7E3A0;
+    --lavanda-blob: #C9B8ED;
+    --indigo: #7B80E8;
+    --indigo-oscuro: #6165D1;
+    --magenta: #C6437A;
+    --texto-oscuro: #2E2B3D;
+    --texto-secundario: #6B6780;
+    --blanco: #FFFFFF;
+    --borde: #E4DCF5;
+
+    --fuente-display: 'Fraunces', Georgia, serif;
+    --fuente-cuerpo: 'DM Sans', -apple-system, sans-serif;
+}
+
 * {
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-body {
-    background: #f2f2f2;
-    display: flex;
-    justify-content: center;
-    padding: 40px 20px;
-}
-
-.container {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 500px;
-}
-
-h1 {
-    text-align: center;
-    color: #333;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-input, textarea, button {
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-}
-
-button {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #45a049;
-}
-
-ul {
-    list-style: none;
+    margin: 0;
     padding: 0;
 }
 
-li {
-    background: #fafafa;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 12px;
-    margin-bottom: 10px;
+body {
+    font-family: var(--fuente-cuerpo);
+    color: var(--texto-oscuro);
+    background: var(--rosa);
 }
 
-li h3 {
-    margin: 0 0 5px 0;
+.oculta {
+    display: none !important;
 }
 
-li p {
-    margin: 0 0 5px 0;
-    color: #555;
+/* ===== PANTALLAS DE AUTENTICACION (con blobs) ===== */
+
+.pantalla-blobs {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 24px;
+}
+
+.pantalla-blobs--rosa { background: var(--rosa); }
+.pantalla-blobs--lavanda { background: var(--lavanda-fondo); }
+
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.85;
+    filter: blur(0.5px);
+}
+
+.blob--menta {
+    width: 260px;
+    height: 260px;
+    background: var(--menta);
+    top: 8%;
+    right: -60px;
+}
+
+.blob--lavanda {
+    width: 200px;
+    height: 200px;
+    background: var(--lavanda-blob);
+    bottom: 10%;
+    left: -50px;
+}
+
+.tarjeta-auth {
+    position: relative;
+    z-index: 1;
+    background: var(--blanco);
+    border-radius: 24px;
+    padding: 40px 32px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(46, 43, 61, 0.12);
+}
+
+.titulo-form {
+    font-family: var(--fuente-display);
+    font-weight: 600;
+    font-size: 28px;
+    color: var(--texto-oscuro);
+    margin-bottom: 24px;
+}
+
+.tarjeta-auth form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.tarjeta-auth input {
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1.5px solid var(--borde);
+    font-family: var(--fuente-cuerpo);
+    font-size: 15px;
+    background: #FBFAFE;
+}
+
+.tarjeta-auth input:focus {
+    outline: none;
+    border-color: var(--indigo);
+}
+
+.texto-secundario {
+    color: var(--texto-secundario);
     font-size: 14px;
+    margin-top: 20px;
+    text-align: center;
 }
 
-li small {
-    color: #888;
+.texto-secundario a {
+    color: var(--indigo-oscuro);
+    font-weight: 600;
+    text-decoration: none;
 }
 
-.completado {
-    text-decoration: line-through;
+/* ===== BOTONES ===== */
+
+.btn-indigo {
+    background: var(--indigo);
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-family: var(--fuente-cuerpo);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    width: 100%;
+}
+
+.btn-indigo:hover {
+    background: var(--indigo-oscuro);
+}
+
+.btn-indigo--outline {
+    background: transparent;
+    color: var(--indigo);
+    border: 1.5px solid var(--indigo);
+    margin-top: 10px;
+}
+
+.btn-indigo--outline:hover {
+    background: rgba(123, 128, 232, 0.08);
+}
+
+.btn-texto {
+    background: none;
+    border: none;
+    color: var(--texto-secundario);
+    font-family: var(--fuente-cuerpo);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.btn-notif {
+    background: var(--sage);
+    color: var(--texto-oscuro);
+    border: none;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-family: var(--fuente-cuerpo);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.btn-notif:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* ===== APP PRINCIPAL (paciente y terapeuta) ===== */
+
+.pantalla {
+    min-height: 100vh;
+    background: #FAF8FC;
+}
+
+.contenedor-app {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+}
+
+.header-app {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.header-app h1 {
+    font-family: var(--fuente-display);
+    font-weight: 600;
+    font-size: 26px;
+    color: var(--texto-oscuro);
+}
+
+.tarjeta {
+    background: var(--blanco);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 30px rgba(46, 43, 61, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tarjeta input,
+.tarjeta textarea {
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--borde);
+    font-family: var(--fuente-cuerpo);
+    font-size: 14px;
+    background: #FBFAFE;
+}
+
+.tarjeta input:focus,
+.tarjeta textarea:focus {
+    outline: none;
+    border-color: var(--indigo);
+}
+
+/* ===== LISTA DE RECORDATORIOS (estilo nota) ===== */
+
+#listaRecordatorios,
+#listaRecordatoriosPaciente {
+    list-style: none;
+}
+
+#listaRecordatorios li,
+#listaRecordatoriosPaciente li {
+    background: var(--blanco);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 20px rgba(46, 43, 61, 0.05);
+    border-left: 4px solid var(--indigo);
+    position: relative;
+}
+
+#listaRecordatorios li.completado,
+#listaRecordatoriosPaciente li.completado {
+    border-left-color: var(--menta);
     opacity: 0.6;
 }
 
+#listaRecordatorios li h3,
+#listaRecordatoriosPaciente li h3 {
+    font-family: var(--fuente-display);
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.completado h3 {
+    text-decoration: line-through;
+}
+
+#listaRecordatorios li p,
+#listaRecordatoriosPaciente li p {
+    color: var(--texto-secundario);
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+#listaRecordatorios li small,
+#listaRecordatoriosPaciente li small {
+    color: var(--texto-secundario);
+    font-family: 'DM Sans', monospace;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+}
+
 .acciones {
-    margin-top: 8px;
+    margin-top: 12px;
     display: flex;
     gap: 8px;
 }
@@ -90,13 +297,79 @@ li small {
 .acciones button {
     flex: 1;
     font-size: 12px;
-    padding: 6px;
+    font-weight: 700;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--fuente-cuerpo);
+    background: var(--lavanda-fondo);
+    color: var(--texto-oscuro);
 }
 
 .btn-borrar {
-    background: #e74c3c;
+    background: #FADADD !important;
+    color: var(--magenta) !important;
 }
 
-.btn-borrar:hover {
-    background: #c0392b;
+/* ===== PANEL TERAPEUTA ===== */
+
+.codigo-caja {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+#codigoGenerado {
+    font-family: 'DM Sans', monospace;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 0.1em;
+    color: var(--indigo-oscuro);
+}
+
+.tarjeta-paciente {
+    background: var(--blanco);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 6px 20px rgba(46, 43, 61, 0.05);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.1s ease;
+}
+
+.tarjeta-paciente:hover {
+    transform: translateX(4px);
+}
+
+.tarjeta-paciente h3 {
+    font-family: var(--fuente-display);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tarjeta-paciente span {
+    color: var(--texto-secundario);
+    font-size: 13px;
+}
+
+#nombrePacienteSeleccionado {
+    font-family: var(--fuente-display);
+    font-size: 22px;
+    margin: 20px 0 16px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .tarjeta-auth {
+        padding: 32px 24px;
+    }
+    .titulo-form {
+        font-size: 24px;
+    }
 }

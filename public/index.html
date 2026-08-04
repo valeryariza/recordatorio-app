@@ -2,27 +2,128 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Mis Recordatorios</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comfi</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4CAF50">
+    <meta name="theme-color" content="#7B80E8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>📌 Mis Recordatorios</h1>
-        <button id="btnActivarNotificaciones" type="button" style="background:#2196F3; margin-bottom: 15px;">
-    🔔 Activar notificaciones
-</button>
 
-        <form id="formRecordatorio">
-            <input type="text" id="titulo" placeholder="Título" required>
-            <textarea id="descripcion" placeholder="Descripción (opcional)"></textarea>
-            <input type="datetime-local" id="fecha_hora" required>
-            <button type="submit">Agregar recordatorio</button>
-        </form>
+    <!-- ===== PANTALLA: LOGIN ===== -->
+    <section id="pantallaLogin" class="pantalla pantalla-blobs pantalla-blobs--rosa">
+        <div class="blob blob--menta"></div>
+        <div class="blob blob--lavanda"></div>
+        <div class="tarjeta-auth">
+            <h1 class="titulo-form">Inicia sesión</h1>
+            <form id="formLogin">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                <button type="submit" class="btn-indigo">Ingresa</button>
+            </form>
+            <p class="texto-secundario">
+                ¿No tenés una cuenta? <a href="#" data-ir="registroSelector">Registrate</a>
+            </p>
+        </div>
+    </section>
 
-        <ul id="listaRecordatorios"></ul>
-    </div>
+    <!-- ===== PANTALLA: ELEGIR TIPO DE REGISTRO ===== -->
+    <section id="pantallaRegistroSelector" class="pantalla pantalla-blobs pantalla-blobs--lavanda oculta">
+        <div class="tarjeta-auth">
+            <h1 class="titulo-form">Creá tu cuenta</h1>
+            <p class="texto-secundario" style="margin-bottom: 24px;">¿Cómo vas a usar Comfi?</p>
+            <button class="btn-indigo" data-ir="registroPaciente">Registrarme como Persona</button>
+            <button class="btn-indigo btn-indigo--outline" data-ir="registroTerapeuta">Registrarme como Terapeuta</button>
+            <p class="texto-secundario">
+                ¿Ya tenés cuenta? <a href="#" data-ir="login">Inicia sesión</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- ===== PANTALLA: REGISTRO PACIENTE ===== -->
+    <section id="pantallaRegistroPaciente" class="pantalla pantalla-blobs pantalla-blobs--lavanda oculta">
+        <div class="tarjeta-auth">
+            <h1 class="titulo-form">Creá tu cuenta</h1>
+            <form id="formRegistroPaciente">
+                <input type="text" id="pacienteNombre" placeholder="Nombre" required>
+                <input type="email" id="pacienteEmail" placeholder="Email" required>
+                <input type="password" id="pacientePassword" placeholder="Contraseña" required>
+                <input type="text" id="pacienteCodigo" placeholder="Código de invitación de tu terapeuta" required>
+                <button type="submit" class="btn-indigo">Registrarme</button>
+            </form>
+            <p class="texto-secundario">
+                <a href="#" data-ir="registroSelector">← Volver</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- ===== PANTALLA: REGISTRO TERAPEUTA ===== -->
+    <section id="pantallaRegistroTerapeuta" class="pantalla pantalla-blobs pantalla-blobs--lavanda oculta">
+        <div class="tarjeta-auth">
+            <h1 class="titulo-form">Creá tu cuenta</h1>
+            <form id="formRegistroTerapeuta">
+                <input type="text" id="terapeutaNombre" placeholder="Nombre" required>
+                <input type="email" id="terapeutaEmail" placeholder="Email" required>
+                <input type="password" id="terapeutaPassword" placeholder="Contraseña" required>
+                <button type="submit" class="btn-indigo">Registrarme</button>
+            </form>
+            <p class="texto-secundario">
+                <a href="#" data-ir="registroSelector">← Volver</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- ===== PANTALLA: APP PACIENTE (recordatorios) ===== -->
+    <section id="pantallaApp" class="pantalla oculta">
+        <div class="contenedor-app">
+            <header class="header-app">
+                <h1>Mis recordatorios</h1>
+                <button id="btnCerrarSesion" class="btn-texto">Cerrar sesión</button>
+            </header>
+
+            <button id="btnActivarNotificaciones" type="button" class="btn-notif">
+                🔔 Activar notificaciones
+            </button>
+
+            <form id="formRecordatorio" class="tarjeta">
+                <input type="text" id="titulo" placeholder="Título" required>
+                <textarea id="descripcion" placeholder="Descripción (opcional)"></textarea>
+                <input type="datetime-local" id="fecha_hora" required>
+                <button type="submit" class="btn-indigo">Agregar recordatorio</button>
+            </form>
+
+            <ul id="listaRecordatorios"></ul>
+        </div>
+    </section>
+
+    <!-- ===== PANTALLA: APP TERAPEUTA (pacientes) ===== -->
+    <section id="pantallaTerapeuta" class="pantalla oculta">
+        <div class="contenedor-app">
+            <header class="header-app">
+                <h1>Tus pacientes</h1>
+                <button id="btnCerrarSesionTerapeuta" class="btn-texto">Cerrar sesión</button>
+            </header>
+
+            <div class="tarjeta">
+                <p class="texto-secundario" style="margin-bottom: 12px;">Invitá a un paciente nuevo compartiéndole este código:</p>
+                <div class="codigo-caja">
+                    <span id="codigoGenerado">— — — —</span>
+                    <button id="btnGenerarCodigo" class="btn-indigo btn-indigo--outline">Generar código</button>
+                </div>
+            </div>
+
+            <div id="listaPacientes"></div>
+
+            <div id="detallePaciente" class="oculta">
+                <button id="btnVolverPacientes" class="btn-texto">← Volver a pacientes</button>
+                <h2 id="nombrePacienteSeleccionado"></h2>
+                <ul id="listaRecordatoriosPaciente"></ul>
+            </div>
+        </div>
+    </section>
 
     <script src="app.js"></script>
 </body>
