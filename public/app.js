@@ -5,7 +5,9 @@ const pantallas = {
     registroSelector: document.getElementById('pantallaRegistroSelector'),
     registroPaciente: document.getElementById('pantallaRegistroPaciente'),
     registroTerapeuta: document.getElementById('pantallaRegistroTerapeuta'),
+    verificarEmail: document.getElementById('pantallaVerificarEmail'),
     app: document.getElementById('pantallaApp'),
+    perfil: document.getElementById('pantallaPerfil'),
     terapeuta: document.getElementById('pantallaTerapeuta')
 };
 
@@ -21,7 +23,7 @@ document.querySelectorAll('[data-ir]').forEach(el => {
     });
 });
 
-// ===================== SESION (token guardado en el navegador) =====================
+// ===================== SESION =====================
 
 function guardarSesion(token, usuario) {
     localStorage.setItem('comfi_token', token);
@@ -46,7 +48,6 @@ function cerrarSesion() {
 document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
 document.getElementById('btnCerrarSesionTerapeuta').addEventListener('click', cerrarSesion);
 
-// Helper para llamadas autenticadas
 async function fetchAuth(url, opciones = {}) {
     const token = obtenerToken();
     const headers = {
@@ -57,7 +58,6 @@ async function fetchAuth(url, opciones = {}) {
     return fetch(url, { ...opciones, headers });
 }
 
-// Al cargar la pagina: si ya hay sesion, ir directo a la app correspondiente
 function iniciarSegunSesion() {
     const usuario = obtenerUsuario();
     if (!usuario) {
@@ -72,6 +72,56 @@ function iniciarSegunSesion() {
         cargarRecordatorios();
     }
 }
+
+// ===================== VERIFICACION DE EMAIL =====================
+
+let usuarioIdPendiente = null;
+
+function irAVerificarEmail(usuarioId, email) {
+    usuarioIdPendiente = usuarioId;
+    document.getElementById('emailAVerificar').textContent = email;
+    mostrarPantalla('verificarEmail');
+}
+
+document.getElementById('formVerificarEmail').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const codigo = document.getElementById('codigoVerificacion').value.trim();
+
+    try {
+        const res = await fetch('/api/auth/verificar-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuarioId: usuarioIdPendiente, codigo })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.error || 'No se pudo verificar el codigo');
+            return;
+        }
+
+        guardarSesion(data.token, data.usuario);
+        iniciarSegunSesion();
+    } catch (error) {
+        alert('Error de conexion: ' + error.message);
+    }
+});
+
+document.getElementById('btnReenviarCodigo').addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+        const res = await fetch('/api/auth/reenviar-codigo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuarioId: usuarioIdPendiente })
+        });
+        if (res.ok) {
+            alert('Te reenviamos el codigo');
+        }
+    } catch (error) {
+        alert('Error de conexion: ' + error.message);
+    }
+});
 
 // ===================== LOGIN =====================
 
@@ -89,6 +139,10 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
         const data = await res.json();
 
         if (!res.ok) {
+            if (data.requiereVerificacion) {
+                irAVerificarEmail(data.usuarioId, email);
+                return;
+            }
             alert(data.error || 'No se pudo iniciar sesion');
             return;
         }
@@ -100,20 +154,19 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
     }
 });
 
-// ===================== REGISTRO PACIENTE =====================
+// ===================== REGISTRO PACIENTE (sin codigo) =====================
 
 document.getElementById('formRegistroPaciente').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nombre = document.getElementById('pacienteNombre').value;
     const email = document.getElementById('pacienteEmail').value;
     const password = document.getElementById('pacientePassword').value;
-    const codigo_invitacion = document.getElementById('pacienteCodigo').value.trim().toUpperCase();
 
     try {
         const res = await fetch('/api/auth/registro-paciente', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nombre, email, password, codigo_invitacion })
+            body: JSON.stringify({ nombre, email, password })
         });
         const data = await res.json();
 
@@ -122,8 +175,7 @@ document.getElementById('formRegistroPaciente').addEventListener('submit', async
             return;
         }
 
-        guardarSesion(data.token, data.usuario);
-        iniciarSegunSesion();
+        irAVerificarEmail(data.usuarioId, data.email);
     } catch (error) {
         alert('Error de conexion: ' + error.message);
     }
@@ -150,8 +202,61 @@ document.getElementById('formRegistroTerapeuta').addEventListener('submit', asyn
             return;
         }
 
-        guardarSesion(data.token, data.usuario);
-        iniciarSegunSesion();
+        irAVerificarEmail(data.usuarioId, data.email);
+    } catch (error) {
+        alert('Error de conexion: ' + error.message);
+    }
+});
+
+// ===================== PERFIL (paciente) =====================
+
+document.getElementById('btnAbrirPerfil').addEventListener('click', () => {
+    mostrarPantalla('perfil');
+    cargarMisTerapeutas();
+});
+
+document.getElementById('btnVolverDePerfil').addEventListener('click', () => {
+    mostrarPantalla('app');
+    cargarRecordatorios();
+});
+
+async function cargarMisTerapeutas() {
+    const res = await fetchAuth('/api/perfil/mis-terapeutas');
+    const terapeutas = await res.json();
+    const cont = document.getElementById('listaMisTerapeutas');
+
+    if (terapeutas.length === 0) {
+        cont.innerHTML = '<p class="texto-secundario">Todavía no estás vinculado a ningún terapeuta.</p>';
+        return;
+    }
+
+    cont.innerHTML = terapeutas.map(t => `
+        <div class="tarjeta-paciente" style="cursor: default;">
+            <h3>${t.nombre}</h3>
+            <span>${t.email}</span>
+        </div>
+    `).join('');
+}
+
+document.getElementById('formVincularTerapeuta').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const codigo = document.getElementById('codigoTerapeuta').value;
+
+    try {
+        const res = await fetchAuth('/api/perfil/vincular-terapeuta', {
+            method: 'POST',
+            body: JSON.stringify({ codigo })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.error || 'No se pudo vincular');
+            return;
+        }
+
+        alert('¡Vinculado correctamente!');
+        document.getElementById('formVincularTerapeuta').reset();
+        cargarMisTerapeutas();
     } catch (error) {
         alert('Error de conexion: ' + error.message);
     }

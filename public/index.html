@@ -43,7 +43,7 @@
         </div>
     </section>
 
-    <!-- ===== PANTALLA: REGISTRO PACIENTE ===== -->
+    <!-- ===== PANTALLA: REGISTRO PACIENTE (sin codigo) ===== -->
     <section id="pantallaRegistroPaciente" class="pantalla pantalla-blobs pantalla-blobs--lavanda oculta">
         <div class="tarjeta-auth">
             <h1 class="titulo-form">Creá tu cuenta</h1>
@@ -51,7 +51,6 @@
                 <input type="text" id="pacienteNombre" placeholder="Nombre" required>
                 <input type="email" id="pacienteEmail" placeholder="Email" required>
                 <input type="password" id="pacientePassword" placeholder="Contraseña" required>
-                <input type="text" id="pacienteCodigo" placeholder="Código de invitación de tu terapeuta" required>
                 <button type="submit" class="btn-indigo">Registrarme</button>
             </form>
             <p class="texto-secundario">
@@ -76,12 +75,33 @@
         </div>
     </section>
 
+    <!-- ===== PANTALLA: VERIFICAR EMAIL ===== -->
+    <section id="pantallaVerificarEmail" class="pantalla pantalla-blobs pantalla-blobs--rosa oculta">
+        <div class="blob blob--menta"></div>
+        <div class="tarjeta-auth">
+            <h1 class="titulo-form">Verificá tu email</h1>
+            <p class="texto-secundario" style="margin-bottom: 20px; text-align: left;">
+                Te mandamos un código de 6 dígitos a <strong id="emailAVerificar"></strong>. Revisá también la carpeta de spam.
+            </p>
+            <form id="formVerificarEmail">
+                <input type="text" id="codigoVerificacion" placeholder="Código de 6 dígitos" maxlength="6" required>
+                <button type="submit" class="btn-indigo">Verificar</button>
+            </form>
+            <p class="texto-secundario">
+                ¿No te llegó? <a href="#" id="btnReenviarCodigo">Reenviar código</a>
+            </p>
+        </div>
+    </section>
+
     <!-- ===== PANTALLA: APP PACIENTE (recordatorios) ===== -->
     <section id="pantallaApp" class="pantalla oculta">
         <div class="contenedor-app">
             <header class="header-app">
                 <h1>Mis recordatorios</h1>
-                <button id="btnCerrarSesion" class="btn-texto">Cerrar sesión</button>
+                <div>
+                    <button id="btnAbrirPerfil" class="btn-texto">Perfil</button>
+                    <button id="btnCerrarSesion" class="btn-texto">Cerrar sesión</button>
+                </div>
             </header>
 
             <button id="btnActivarNotificaciones" type="button" class="btn-notif">
@@ -96,6 +116,34 @@
             </form>
 
             <ul id="listaRecordatorios"></ul>
+        </div>
+    </section>
+
+    <!-- ===== PANTALLA: PERFIL (paciente) ===== -->
+    <section id="pantallaPerfil" class="pantalla oculta">
+        <div class="contenedor-app">
+            <header class="header-app">
+                <h1>Tu perfil</h1>
+                <button id="btnVolverDePerfil" class="btn-texto">← Volver</button>
+            </header>
+
+            <div class="tarjeta">
+                <h3 style="font-family: var(--fuente-display); margin-bottom: 12px;">Vincular a un terapeuta</h3>
+                <p class="texto-secundario" style="margin-bottom: 12px;">
+                    Pedile el código a tu terapeuta e ingresalo acá para que pueda ver tus recordatorios.
+                </p>
+                <form id="formVincularTerapeuta">
+                    <input type="text" id="codigoTerapeuta" placeholder="Código del terapeuta" required>
+                    <button type="submit" class="btn-indigo">Vincular</button>
+                </form>
+            </div>
+
+            <div class="tarjeta">
+                <h3 style="font-family: var(--fuente-display); margin-bottom: 12px;">Tus terapeutas</h3>
+                <div id="listaMisTerapeutas">
+                    <p class="texto-secundario">Todavía no estás vinculado a ningún terapeuta.</p>
+                </div>
+            </div>
         </div>
     </section>
 
