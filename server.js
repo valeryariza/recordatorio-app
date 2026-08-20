@@ -240,6 +240,64 @@ app.get('/api/perfil/mis-terapeutas', requiereLogin, async (req, res) => {
     }
 });
 
+// ===================== PERFIL: ELIMINAR CUENTA =====================
+
+app.delete('/api/perfil/cuenta', requiereLogin, async (req, res) => {
+    const conn = await db.getConnection();
+    try {
+        const { password } = req.body;
+        if (!password) {
+            conn.release();
+            return res.status(400).json({ error: 'Necesitamos tu contrasena para confirmar' });
+        }
+
+        const [usuarios] = await db.query('SELECT * FROM usuarios WHERE id = ?', [req.usuario.id]);
+        if (usuarios.length === 0) {
+            conn.release();
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        const usuario = usuarios[0];
+
+        const passwordValida = await bcrypt.compare(password, usuario.password_hash);
+        if (!passwordValida) {
+            conn.release();
+            return res.status(401).json({ error: 'Contrasena incorrecta' });
+        }
+
+        await conn.beginTransaction();
+
+        // Recordatorios propios
+        await conn.query('DELETE FROM recordatorios WHERE usuario_id = ?', [req.usuario.id]);
+
+        // Codigos de verificacion de email
+        await conn.query('DELETE FROM codigos_verificacion WHERE usuario_id = ?', [req.usuario.id]);
+
+        // Vinculaciones (como paciente o como terapeuta)
+        await conn.query(
+            'DELETE FROM vinculaciones WHERE paciente_id = ? OR terapeuta_id = ?',
+            [req.usuario.id, req.usuario.id]
+        );
+
+        // Codigos de invitacion generados (como terapeuta) o usados (como paciente)
+        await conn.query(
+            'DELETE FROM codigos_invitacion WHERE terapeuta_id = ? OR paciente_id = ?',
+            [req.usuario.id, req.usuario.id]
+        );
+
+        // Usuario
+        await conn.query('DELETE FROM usuarios WHERE id = ?', [req.usuario.id]);
+
+        await conn.commit();
+        conn.release();
+        res.json({ message: 'Cuenta eliminada correctamente' });
+    } catch (error) {
+        await conn.rollback();
+        conn.release();
+        console.error('ERROR eliminando cuenta:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ===================== TERAPEUTA: CODIGOS Y PACIENTES =====================
 
 app.post('/api/terapeuta/codigo-invitacion', requiereLogin, requiereTerapeuta, async (req, res) => {

@@ -145,6 +145,30 @@
                 </div>
             </div>
         </div>
+        <div class="tarjeta tarjeta-peligro">
+    <h3 style="font-family: var(--fuente-display); margin-bottom: 12px; color: var(--magenta);">Eliminar cuenta</h3>
+    <p class="texto-secundario" style="margin-bottom: 12px;">
+        Esta acción es permanente. Se van a borrar tus recordatorios, vinculaciones y toda tu información.
+    </p>
+    <button id="btnAbrirEliminarCuenta" class="btn-indigo btn-peligro">Eliminar mi cuenta</button>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="modalEliminarCuenta" class="modal-overlay oculta">
+    <div class="modal-caja">
+        <h3 style="font-family: var(--fuente-display); margin-bottom: 8px;">¿Estás seguro?</h3>
+        <p class="texto-secundario" style="margin-bottom: 16px;">
+            Ingresá tu contraseña para confirmar que querés eliminar tu cuenta de forma permanente.
+        </p>
+        <form id="formEliminarCuenta">
+            <input type="password" id="passwordEliminarCuenta" placeholder="Contraseña" required>
+            <div style="display: flex; gap: 10px; margin-top: 14px;">
+                <button type="button" id="btnCancelarEliminarCuenta" class="btn-indigo btn-indigo--outline">Cancelar</button>
+                <button type="submit" class="btn-indigo btn-peligro">Sí, eliminar</button>
+            </div>
+        </form>
+    </div>
+</div>
     </section>
 
     <!-- ===== PANTALLA: APP TERAPEUTA (pacientes) ===== -->

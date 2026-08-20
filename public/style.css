@@ -373,3 +373,43 @@ body {
         font-size: 24px;
     }
 }
+
+.tarjeta-peligro {
+    border: 1.5px solid #FADADD;
+}
+
+.btn-peligro {
+    background: var(--magenta) !important;
+}
+
+.btn-peligro:hover {
+    background: #A8305F !important;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(46, 43, 61, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+.modal-caja {
+    background: var(--blanco);
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    max-width: 380px;
+}
+
+.modal-caja input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--borde);
+    font-family: var(--fuente-cuerpo);
+    font-size: 14px;
+}
