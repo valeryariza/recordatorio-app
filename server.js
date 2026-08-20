@@ -420,8 +420,8 @@ app.post('/api/suscripciones', requiereLogin, async (req, res) => {
     try {
         const { endpoint, keys } = req.body;
         await db.query(
-            'INSERT INTO suscripciones (endpoint, p256dh, auth) VALUES (?, ?, ?)',
-            [endpoint, keys.p256dh, keys.auth]
+            'INSERT INTO suscripciones (usuario_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)',
+            [req.usuario.id, endpoint, keys.p256dh, keys.auth]
         );
         res.status(201).json({ message: 'Suscripcion guardada' });
     } catch (error) {
@@ -430,8 +430,11 @@ app.post('/api/suscripciones', requiereLogin, async (req, res) => {
     }
 });
 
-async function enviarNotificacionATodos(payload) {
-    const [suscripciones] = await db.query('SELECT * FROM suscripciones');
+async function enviarNotificacionAUsuario(usuarioId, payload) {
+    const [suscripciones] = await db.query(
+        'SELECT * FROM suscripciones WHERE usuario_id = ?',
+        [usuarioId]
+    );
 
     for (const sub of suscripciones) {
         const pushSubscription = {
@@ -459,7 +462,7 @@ setInterval(async () => {
             const diferencia = fechaRecordatorio - ahora;
 
             if (diferencia <= 0 && diferencia > -60000) {
-                await enviarNotificacionATodos({
+                await enviarNotificacionAUsuario(r.usuario_id, {
                     title: '⏰ Recordatorio',
                     body: r.titulo
                 });
