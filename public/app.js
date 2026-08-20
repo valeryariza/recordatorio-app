@@ -262,6 +262,55 @@ document.getElementById('formVincularTerapeuta').addEventListener('submit', asyn
     }
 });
 
+// ===================== ELIMINAR CUENTA =====================
+
+const modalEliminarCuenta = document.getElementById('modalEliminarCuenta');
+
+function abrirModalEliminarCuenta() {
+    modalEliminarCuenta.classList.remove('oculta');
+}
+
+document.getElementById('btnAbrirEliminarCuenta')?.addEventListener('click', abrirModalEliminarCuenta);
+document.getElementById('btnAbrirEliminarCuentaTerapeuta')?.addEventListener('click', abrirModalEliminarCuenta);
+
+document.getElementById('btnCancelarEliminarCuenta').addEventListener('click', () => {
+    modalEliminarCuenta.classList.add('oculta');
+    document.getElementById('formEliminarCuenta').reset();
+});
+
+document.getElementById('formEliminarCuenta').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = document.getElementById('passwordEliminarCuenta').value;
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Eliminando...';
+
+    try {
+        const res = await fetchAuth('/api/perfil/cuenta', {
+            method: 'DELETE',
+            body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.error || 'No se pudo eliminar la cuenta');
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Sí, eliminar';
+            return;
+        }
+
+        alert('Tu cuenta fue eliminada. ¡Gracias por haber usado Comfi!');
+        localStorage.removeItem('comfi_token');
+        localStorage.removeItem('comfi_usuario');
+        window.location.reload();
+    } catch (error) {
+        alert('Error de conexion: ' + error.message);
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Sí, eliminar';
+    }
+});
+
 // ===================== RECORDATORIOS (paciente) =====================
 
 const API_URL = '/api/recordatorios';
@@ -469,49 +518,3 @@ if (btnActivar) {
 // ===================== ARRANQUE =====================
 
 iniciarSegunSesion();
-
-// ===================== ELIMINAR CUENTA =====================
-
-const modalEliminarCuenta = document.getElementById('modalEliminarCuenta');
-
-document.getElementById('btnAbrirEliminarCuenta')?.addEventListener('click', () => {
-    modalEliminarCuenta.classList.remove('oculta');
-});
-
-document.getElementById('btnCancelarEliminarCuenta')?.addEventListener('click', () => {
-    modalEliminarCuenta.classList.add('oculta');
-    document.getElementById('formEliminarCuenta').reset();
-});
-
-document.getElementById('formEliminarCuenta')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const password = document.getElementById('passwordEliminarCuenta').value;
-    const btnSubmit = e.target.querySelector('button[type="submit"]');
-
-    btnSubmit.disabled = true;
-    btnSubmit.textContent = 'Eliminando...';
-
-    try {
-        const res = await fetchAuth('/api/perfil/cuenta', {
-            method: 'DELETE',
-            body: JSON.stringify({ password })
-        });
-        const data = await res.json();
-
-        if (!res.ok) {
-            alert(data.error || 'No se pudo eliminar la cuenta');
-            btnSubmit.disabled = false;
-            btnSubmit.textContent = 'Sí, eliminar';
-            return;
-        }
-
-        alert('Tu cuenta fue eliminada. ¡Gracias por haber usado Comfi!');
-        localStorage.removeItem('comfi_token');
-        localStorage.removeItem('comfi_usuario');
-        window.location.reload();
-    } catch (error) {
-        alert('Error de conexion: ' + error.message);
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = 'Sí, eliminar';
-    }
-});
