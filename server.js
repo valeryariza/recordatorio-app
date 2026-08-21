@@ -18,7 +18,7 @@ webpush.setVapidDetails(
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static('public'));
 
 // Genera un codigo de 6 digitos y lo manda por email
@@ -410,6 +410,27 @@ app.delete('/api/recordatorios/:id', requiereLogin, async (req, res) => {
     }
 });
 
+app.put('/api/recordatorios/:id/completar-con-foto', requiereLogin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { foto } = req.body;
+
+        if (!foto) {
+            return res.status(400).json({ error: 'Falta la foto de confirmacion' });
+        }
+
+        await db.query(
+            'UPDATE recordatorios SET completado = TRUE, foto_confirmacion = ?, confirmado_en = NOW() WHERE id = ? AND usuario_id = ?',
+            [foto, id, req.usuario.id]
+        );
+
+        res.json({ message: 'Recordatorio confirmado con foto' });
+    } catch (error) {
+        console.error('ERROR en completar-con-foto:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ===================== NOTIFICACIONES PUSH =====================
 
 app.get('/api/vapid-public-key', (req, res) => {
@@ -457,13 +478,16 @@ setInterval(async () => {
         );
         const ahora = new Date();
 
+        const DOS_HORAS = 2 * 60 * 60 * 1000;
+
         for (const r of recordatorios) {
             const fechaRecordatorio = new Date(r.fecha_hora);
             const diferencia = fechaRecordatorio - ahora;
 
-            if (diferencia <= 0 && diferencia > -60000) {
+            // Repite el aviso cada 30s mientras este vencido y sin confirmar (hasta un limite de 2hs)
+            if (diferencia <= 0 && diferencia > -DOS_HORAS) {
                 await enviarNotificacionAUsuario(r.usuario_id, {
-                    title: '⏰ Recordatorio',
+                    title: '⏰ Recordatorio pendiente',
                     body: r.titulo
                 });
             }

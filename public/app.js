@@ -40,6 +40,8 @@ function obtenerUsuario() {
 }
 
 function cerrarSesion() {
+    detenerRevisionAlarmas();
+    ocultarAlarma();
     localStorage.removeItem('comfi_token');
     localStorage.removeItem('comfi_usuario');
     mostrarPantalla('login');
@@ -70,6 +72,7 @@ function iniciarSegunSesion() {
     } else {
         mostrarPantalla('app');
         cargarRecordatorios();
+        iniciarRevisionAlarmas();
     }
 }
 
@@ -311,6 +314,149 @@ document.getElementById('formEliminarCuenta').addEventListener('submit', async (
     }
 });
 
+// ===================== ALARMA CON FOTO =====================
+
+let recordatorioAlarmaActivo = null;
+let intervaloRevisionAlarma = null;
+let audioCtxAlarma = null;
+let intervaloSonidoAlarma = null;
+
+function iniciarRevisionAlarmas() {
+    revisarAlarmas();
+    intervaloRevisionAlarma = setInterval(revisarAlarmas, 5000);
+}
+
+function detenerRevisionAlarmas() {
+    if (intervaloRevisionAlarma) clearInterval(intervaloRevisionAlarma);
+    intervaloRevisionAlarma = null;
+}
+
+async function revisarAlarmas() {
+    if (recordatorioAlarmaActivo) return; // ya hay una sonando, no buscar otra
+
+    try {
+        const res = await fetchAuth(API_URL);
+        const recordatorios = await res.json();
+        const ahora = new Date();
+        const vencido = recordatorios.find(r => !r.completado && new Date(r.fecha_hora) <= ahora);
+
+        if (vencido) {
+            mostrarAlarma(vencido);
+        }
+    } catch (error) {
+        console.error('Error revisando alarmas:', error);
+    }
+}
+
+function mostrarAlarma(recordatorio) {
+    recordatorioAlarmaActivo = recordatorio;
+    document.getElementById('alarmaTitulo').textContent = recordatorio.titulo;
+    document.getElementById('alarmaDescripcion').textContent = recordatorio.descripcion || '';
+    document.getElementById('alarmaError').classList.add('oculta');
+    document.getElementById('pantallaAlarma').classList.remove('oculta');
+    iniciarSonidoAlarma();
+}
+
+function ocultarAlarma() {
+    recordatorioAlarmaActivo = null;
+    document.getElementById('pantallaAlarma').classList.add('oculta');
+    document.getElementById('inputFotoAlarma').value = '';
+    detenerSonidoAlarma();
+}
+
+function iniciarSonidoAlarma() {
+    if (!audioCtxAlarma) {
+        audioCtxAlarma = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function beep() {
+        const osc = audioCtxAlarma.createOscillator();
+        const gain = audioCtxAlarma.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 880;
+        gain.gain.value = 0.15;
+        osc.connect(gain).connect(audioCtxAlarma.destination);
+        osc.start();
+        osc.stop(audioCtxAlarma.currentTime + 0.25);
+    }
+
+    beep();
+    intervaloSonidoAlarma = setInterval(beep, 500);
+
+    if (navigator.vibrate) {
+        navigator.vibrate([300, 200, 300, 200, 300]);
+    }
+}
+
+function detenerSonidoAlarma() {
+    if (intervaloSonidoAlarma) clearInterval(intervaloSonidoAlarma);
+    intervaloSonidoAlarma = null;
+    if (navigator.vibrate) navigator.vibrate(0);
+}
+
+function comprimirImagen(archivo) {
+    return new Promise((resolve, reject) => {
+        const lector = new FileReader();
+        lector.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const maxAncho = 800;
+                const escala = Math.min(1, maxAncho / img.width);
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width * escala;
+                canvas.height = img.height * escala;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', 0.6));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        lector.onerror = reject;
+        lector.readAsDataURL(archivo);
+    });
+}
+
+document.getElementById('btnTomarFotoAlarma').addEventListener('click', () => {
+    document.getElementById('inputFotoAlarma').click();
+});
+
+document.getElementById('inputFotoAlarma').addEventListener('change', async (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo || !recordatorioAlarmaActivo) return;
+
+    const btn = document.getElementById('btnTomarFotoAlarma');
+    const errorEl = document.getElementById('alarmaError');
+    btn.disabled = true;
+    btn.textContent = 'Subiendo...';
+    errorEl.classList.add('oculta');
+
+    try {
+        const fotoBase64 = await comprimirImagen(archivo);
+        const res = await fetchAuth(`${API_URL}/${recordatorioAlarmaActivo.id}/completar-con-foto`, {
+            method: 'PUT',
+            body: JSON.stringify({ foto: fotoBase64 })
+        });
+
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            errorEl.textContent = data.error || 'No se pudo confirmar. Probá de nuevo.';
+            errorEl.classList.remove('oculta');
+            btn.disabled = false;
+            btn.textContent = '📷 Tomar foto para apagar';
+            return;
+        }
+
+        ocultarAlarma();
+        cargarRecordatorios();
+    } catch (error) {
+        errorEl.textContent = 'Error de conexion: ' + error.message;
+        errorEl.classList.remove('oculta');
+        btn.disabled = false;
+        btn.textContent = '📷 Tomar foto para apagar';
+    }
+});
+
 // ===================== RECORDATORIOS (paciente) =====================
 
 const API_URL = '/api/recordatorios';
@@ -431,6 +577,7 @@ async function verRecordatoriosPaciente(pacienteId, nombre) {
                 <h3>${r.titulo}</h3>
                 <p>${r.descripcion || ''}</p>
                 <small>${new Date(r.fecha_hora).toLocaleString()}</small>
+                ${r.foto_confirmacion ? `<img src="${r.foto_confirmacion}" class="foto-confirmacion" alt="Foto de confirmacion">` : ''}
             `;
             ul.appendChild(li);
         });

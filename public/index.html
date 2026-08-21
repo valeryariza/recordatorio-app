@@ -189,6 +189,19 @@
         </div>
     </section>
 
+    <!-- ===== ALARMA A PANTALLA COMPLETA (solo se apaga con foto) ===== -->
+    <div id="pantallaAlarma" class="alarma-overlay oculta">
+        <div class="alarma-contenido">
+            <div class="alarma-icono">⏰</div>
+            <h2 id="alarmaTitulo"></h2>
+            <p class="texto-secundario" id="alarmaDescripcion"></p>
+            <p class="alarma-instruccion">Tomá una foto para apagar la alarma</p>
+            <input type="file" id="inputFotoAlarma" accept="image/*" capture="environment" class="oculta">
+            <button id="btnTomarFotoAlarma" class="btn-indigo btn-alarma">📷 Tomar foto para apagar</button>
+            <p id="alarmaError" class="alarma-error oculta"></p>
+        </div>
+    </div>
+
     <!-- ===== MODAL: CONFIRMAR ELIMINAR CUENTA (compartido) ===== -->
     <div id="modalEliminarCuenta" class="modal-overlay oculta">
         <div class="modal-caja">

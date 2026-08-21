@@ -417,6 +417,88 @@ body {
     border-color: var(--indigo);
 }
 
+/* ===== ALARMA A PANTALLA COMPLETA ===== */
+
+.alarma-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--magenta);
+    background: linear-gradient(160deg, var(--magenta), var(--indigo-oscuro));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 24px;
+}
+
+.alarma-contenido {
+    text-align: center;
+    max-width: 380px;
+    color: var(--blanco);
+}
+
+.alarma-icono {
+    font-size: 64px;
+    margin-bottom: 16px;
+    animation: alarma-pulso 1s infinite;
+}
+
+@keyframes alarma-pulso {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+.alarma-contenido h2 {
+    font-family: var(--fuente-display);
+    font-size: 26px;
+    margin-bottom: 8px;
+}
+
+.alarma-contenido .texto-secundario {
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.alarma-instruccion {
+    font-weight: 700;
+    margin-bottom: 20px;
+    font-size: 15px;
+}
+
+.btn-alarma {
+    background: var(--blanco);
+    color: var(--magenta);
+    font-size: 17px;
+    padding: 18px 20px;
+}
+
+.btn-alarma:hover {
+    background: #FFF0F3;
+}
+
+.btn-alarma:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.alarma-error {
+    color: var(--blanco);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-top: 14px;
+    font-size: 14px;
+}
+
+.foto-confirmacion {
+    width: 100%;
+    max-width: 240px;
+    border-radius: 12px;
+    margin-top: 10px;
+    display: block;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
     .tarjeta-auth {
