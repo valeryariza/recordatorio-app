@@ -303,7 +303,7 @@ document.getElementById('formEliminarCuenta').addEventListener('submit', async (
             return;
         }
 
-        alert('Tu cuenta fue eliminada. ¡Gracias por haber usado Comfi!');
+        alert('Tu cuenta fue eliminada. ¡Gracias por haber usado Read Me!');
         localStorage.removeItem('comfi_token');
         localStorage.removeItem('comfi_usuario');
         window.location.reload();

@@ -32,9 +32,9 @@ async function enviarCodigoVerificacion(usuarioId, email, nombre) {
     );
 
     await resend.emails.send({
-        from: 'Comfi <hola@readme.lat>',
+        from: 'Read Me <hola@readme.lat>',
         to: email,
-        subject: 'Tu codigo de verificacion de Comfi',
+        subject: 'Tu codigo de verificacion de Read Me',
         html: `
             <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto;">
                 <h2>Hola ${nombre} 👋</h2>
