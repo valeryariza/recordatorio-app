@@ -319,7 +319,10 @@ document.getElementById('formEliminarCuenta').addEventListener('submit', async (
 let recordatorioAlarmaActivo = null;
 let intervaloRevisionAlarma = null;
 let audioCtxAlarma = null;
-let intervaloSonidoAlarma = null;
+let oscAlarma = null;
+let lfoAlarma = null;
+let gainAlarma = null;
+let wakeLockAlarma = null;
 
 function iniciarRevisionAlarmas() {
     revisarAlarmas();
@@ -354,43 +357,127 @@ function mostrarAlarma(recordatorio) {
     document.getElementById('alarmaDescripcion').textContent = recordatorio.descripcion || '';
     document.getElementById('alarmaError').classList.add('oculta');
     document.getElementById('pantallaAlarma').classList.remove('oculta');
+    document.body.classList.add('alarma-activa');
+
     iniciarSonidoAlarma();
+    activarBloqueoNavegacion();
+    solicitarPantallaCompleta();
+    solicitarWakeLock();
 }
 
 function ocultarAlarma() {
     recordatorioAlarmaActivo = null;
     document.getElementById('pantallaAlarma').classList.add('oculta');
     document.getElementById('inputFotoAlarma').value = '';
+    document.body.classList.remove('alarma-activa');
+
     detenerSonidoAlarma();
+    desactivarBloqueoNavegacion();
+    salirPantallaCompleta();
+    liberarWakeLock();
+}
+
+// --- Evitar que el boton "atras" saque de la alarma ---
+
+function activarBloqueoNavegacion() {
+    history.pushState({ alarma: true }, '');
+    window.addEventListener('popstate', atraparRetroceso);
+}
+
+function desactivarBloqueoNavegacion() {
+    window.removeEventListener('popstate', atraparRetroceso);
+}
+
+function atraparRetroceso() {
+    if (recordatorioAlarmaActivo) {
+        history.pushState({ alarma: true }, '');
+    }
+}
+
+// --- Pantalla completa (oculta la barra del navegador) ---
+
+function solicitarPantallaCompleta() {
+    const el = document.documentElement;
+    const solicitar = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (solicitar) {
+        solicitar.call(el).catch(() => {});
+    }
+}
+
+function salirPantallaCompleta() {
+    if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+    }
+}
+
+// --- Mantener la pantalla encendida mientras suena la alarma ---
+
+async function solicitarWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLockAlarma = await navigator.wakeLock.request('screen');
+        }
+    } catch (error) {
+        console.error('No se pudo activar wake lock:', error);
+    }
+}
+
+function liberarWakeLock() {
+    if (wakeLockAlarma) {
+        wakeLockAlarma.release().catch(() => {});
+        wakeLockAlarma = null;
+    }
 }
 
 function iniciarSonidoAlarma() {
-    if (!audioCtxAlarma) {
-        audioCtxAlarma = new (window.AudioContext || window.webkitAudioContext)();
-    }
+    try {
+        if (!audioCtxAlarma) {
+            audioCtxAlarma = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtxAlarma.state === 'suspended') {
+            audioCtxAlarma.resume();
+        }
 
-    function beep() {
-        const osc = audioCtxAlarma.createOscillator();
-        const gain = audioCtxAlarma.createGain();
-        osc.type = 'square';
-        osc.frequency.value = 880;
-        gain.gain.value = 0.15;
-        osc.connect(gain).connect(audioCtxAlarma.destination);
-        osc.start();
-        osc.stop(audioCtxAlarma.currentTime + 0.25);
-    }
+        oscAlarma = audioCtxAlarma.createOscillator();
+        gainAlarma = audioCtxAlarma.createGain();
+        lfoAlarma = audioCtxAlarma.createOscillator();
+        const lfoGain = audioCtxAlarma.createGain();
 
-    beep();
-    intervaloSonidoAlarma = setInterval(beep, 500);
+        oscAlarma.type = 'square';
+        oscAlarma.frequency.value = 880;
+
+        lfoAlarma.type = 'square';
+        lfoAlarma.frequency.value = 2; // pulsos por segundo, efecto de alarma
+        lfoGain.gain.value = 0.15;
+
+        gainAlarma.gain.value = 0.001;
+
+        lfoAlarma.connect(lfoGain);
+        lfoGain.connect(gainAlarma.gain);
+        oscAlarma.connect(gainAlarma).connect(audioCtxAlarma.destination);
+
+        oscAlarma.start();
+        lfoAlarma.start();
+    } catch (error) {
+        console.error('No se pudo iniciar el sonido de la alarma:', error);
+    }
 
     if (navigator.vibrate) {
-        navigator.vibrate([300, 200, 300, 200, 300]);
+        navigator.vibrate([300, 200, 300, 200, 300, 200, 300]);
     }
 }
 
 function detenerSonidoAlarma() {
-    if (intervaloSonidoAlarma) clearInterval(intervaloSonidoAlarma);
-    intervaloSonidoAlarma = null;
+    try {
+        if (oscAlarma) { oscAlarma.stop(); oscAlarma.disconnect(); }
+        if (lfoAlarma) { lfoAlarma.stop(); lfoAlarma.disconnect(); }
+        if (gainAlarma) { gainAlarma.disconnect(); }
+    } catch (error) {
+        // puede que ya este detenido, no pasa nada
+    }
+    oscAlarma = null;
+    lfoAlarma = null;
+    gainAlarma = null;
     if (navigator.vibrate) navigator.vibrate(0);
 }
 
