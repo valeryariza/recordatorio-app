@@ -32,7 +32,7 @@ async function enviarCodigoVerificacion(usuarioId, email, nombre) {
     );
 
     await resend.emails.send({
-        from: 'Comfi <onboarding@resend.dev>',
+        from: 'Comfi <hola@readme.lat>',
         to: email,
         subject: 'Tu codigo de verificacion de Comfi',
         html: `
