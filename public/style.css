@@ -229,7 +229,8 @@ body.alarma-activa {
 }
 
 .tarjeta input,
-.tarjeta textarea {
+.tarjeta textarea,
+.tarjeta select {
     padding: 12px 14px;
     border-radius: 10px;
     border: 1.5px solid var(--borde);
@@ -239,7 +240,8 @@ body.alarma-activa {
 }
 
 .tarjeta input:focus,
-.tarjeta textarea:focus {
+.tarjeta textarea:focus,
+.tarjeta select:focus {
     outline: none;
     border-color: var(--indigo);
 }
@@ -299,10 +301,12 @@ body.alarma-activa {
     margin-top: 12px;
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .acciones button {
     flex: 1;
+    min-width: 80px;
     font-size: 12px;
     font-weight: 700;
     padding: 8px;
@@ -504,6 +508,57 @@ body.alarma-activa {
     border-radius: 12px;
     margin-top: 10px;
     display: block;
+}
+
+.badge-recurrencia {
+    display: inline-block;
+    background: var(--lavanda-fondo);
+    color: var(--indigo-oscuro);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-top: 6px;
+}
+
+.modal-caja--ancha {
+    max-width: 480px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-historial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.lista-historial {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.item-historial {
+    background: #FBFAFE;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.foto-historial {
+    width: 100%;
+    border-radius: 10px;
+    display: block;
+}
+
+.fecha-historial {
+    font-size: 13px;
+    color: var(--texto-secundario);
+    font-weight: 600;
 }
 
 /* Responsive */

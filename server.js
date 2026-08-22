@@ -370,13 +370,14 @@ app.get('/api/recordatorios', requiereLogin, async (req, res) => {
 
 app.post('/api/recordatorios', requiereLogin, async (req, res) => {
     try {
-        const { titulo, descripcion, fecha_hora } = req.body;
+        const { titulo, descripcion, fecha_hora, recurrencia } = req.body;
         const fechaHoraSQL = new Date(fecha_hora);
+        const recurrenciaValida = ['ninguna', 'diaria', 'semanal'].includes(recurrencia) ? recurrencia : 'ninguna';
         const [result] = await db.query(
-            'INSERT INTO recordatorios (titulo, descripcion, fecha_hora, usuario_id) VALUES (?, ?, ?, ?)',
-            [titulo, descripcion, fechaHoraSQL, req.usuario.id]
+            'INSERT INTO recordatorios (titulo, descripcion, fecha_hora, usuario_id, recurrencia) VALUES (?, ?, ?, ?, ?)',
+            [titulo, descripcion, fechaHoraSQL, req.usuario.id, recurrenciaValida]
         );
-        res.json({ id: result.insertId, titulo, descripcion, fecha_hora });
+        res.json({ id: result.insertId, titulo, descripcion, fecha_hora, recurrencia: recurrenciaValida });
     } catch (error) {
         console.error('ERROR en POST /api/recordatorios:', error);
         res.status(500).json({ error: error.message });
@@ -419,14 +420,74 @@ app.put('/api/recordatorios/:id/completar-con-foto', requiereLogin, async (req, 
             return res.status(400).json({ error: 'Falta la foto de confirmacion' });
         }
 
-        await db.query(
-            'UPDATE recordatorios SET completado = TRUE, foto_confirmacion = ?, confirmado_en = NOW() WHERE id = ? AND usuario_id = ?',
-            [foto, id, req.usuario.id]
+        const [rows] = await db.query(
+            'SELECT * FROM recordatorios WHERE id = ? AND usuario_id = ?',
+            [id, req.usuario.id]
         );
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Recordatorio no encontrado' });
+        }
+        const recordatorio = rows[0];
+
+        // Guardamos esta confirmacion en el historial (sirve para recurrentes y no recurrentes)
+        await db.query(
+            'INSERT INTO historial_confirmaciones (recordatorio_id, foto) VALUES (?, ?)',
+            [id, foto]
+        );
+
+        if (recordatorio.recurrencia === 'diaria' || recordatorio.recurrencia === 'semanal') {
+            const diasASumar = recordatorio.recurrencia === 'diaria' ? 1 : 7;
+            const proximaFecha = new Date(recordatorio.fecha_hora);
+            proximaFecha.setDate(proximaFecha.getDate() + diasASumar);
+
+            await db.query(
+                'UPDATE recordatorios SET completado = FALSE, fecha_hora = ?, foto_confirmacion = ?, confirmado_en = NOW() WHERE id = ?',
+                [proximaFecha, foto, id]
+            );
+        } else {
+            await db.query(
+                'UPDATE recordatorios SET completado = TRUE, foto_confirmacion = ?, confirmado_en = NOW() WHERE id = ?',
+                [foto, id]
+            );
+        }
 
         res.json({ message: 'Recordatorio confirmado con foto' });
     } catch (error) {
         console.error('ERROR en completar-con-foto:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/recordatorios/:id/historial', requiereLogin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [recordatorios] = await db.query('SELECT * FROM recordatorios WHERE id = ?', [id]);
+        if (recordatorios.length === 0) {
+            return res.status(404).json({ error: 'Recordatorio no encontrado' });
+        }
+        const recordatorio = recordatorios[0];
+
+        if (req.usuario.rol === 'paciente' && recordatorio.usuario_id !== req.usuario.id) {
+            return res.status(403).json({ error: 'No tenes acceso a este recordatorio' });
+        }
+        if (req.usuario.rol === 'terapeuta') {
+            const [vinculo] = await db.query(
+                'SELECT id FROM vinculaciones WHERE terapeuta_id = ? AND paciente_id = ?',
+                [req.usuario.id, recordatorio.usuario_id]
+            );
+            if (vinculo.length === 0) {
+                return res.status(403).json({ error: 'Ese paciente no esta vinculado a vos' });
+            }
+        }
+
+        const [historial] = await db.query(
+            'SELECT * FROM historial_confirmaciones WHERE recordatorio_id = ? ORDER BY confirmado_en DESC',
+            [id]
+        );
+        res.json({ recordatorio, historial });
+    } catch (error) {
+        console.error('ERROR en historial:', error);
         res.status(500).json({ error: error.message });
     }
 });

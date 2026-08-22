@@ -559,14 +559,20 @@ async function cargarRecordatorios() {
         const li = document.createElement('li');
         if (r.completado) li.classList.add('completado');
 
+        const badgeRecurrencia = r.recurrencia === 'diaria' ? '<span class="badge-recurrencia">🔁 Todos los días</span>'
+            : r.recurrencia === 'semanal' ? '<span class="badge-recurrencia">🔁 Cada semana</span>'
+            : '';
+
         li.innerHTML = `
             <h3>${r.titulo}</h3>
             <p>${r.descripcion || ''}</p>
             <small>${new Date(r.fecha_hora).toLocaleString()}</small>
+            ${badgeRecurrencia}
             <div class="acciones">
                 <button onclick="marcarCompletado(${r.id}, ${!r.completado})">
                     ${r.completado ? 'Desmarcar' : 'Completar'}
                 </button>
+                <button onclick="verHistorial(${r.id}, '${r.titulo.replace(/'/g, "\\'")}')">Historial</button>
                 <button class="btn-borrar" onclick="borrarRecordatorio(${r.id})">Borrar</button>
             </div>
         `;
@@ -581,11 +587,12 @@ form.addEventListener('submit', async (e) => {
     const descripcion = document.getElementById('descripcion').value;
     const fecha_hora_local = document.getElementById('fecha_hora').value;
     const fecha_hora = new Date(fecha_hora_local).toISOString();
+    const recurrencia = document.getElementById('recurrencia').value;
 
     try {
         const res = await fetchAuth(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ titulo, descripcion, fecha_hora })
+            body: JSON.stringify({ titulo, descripcion, fecha_hora, recurrencia })
         });
 
         if (!res.ok) {
@@ -618,6 +625,45 @@ async function borrarRecordatorio(id) {
     await fetchAuth(`${API_URL}/${id}`, { method: 'DELETE' });
     cargarRecordatorios();
 }
+
+// ===================== HISTORIAL DE CONFIRMACIONES =====================
+
+const modalHistorial = document.getElementById('modalHistorial');
+
+async function verHistorial(recordatorioId, titulo) {
+    document.getElementById('historialTitulo').textContent = `Historial: ${titulo}`;
+    const cont = document.getElementById('listaHistorial');
+    cont.innerHTML = '<p class="texto-secundario">Cargando...</p>';
+    modalHistorial.classList.remove('oculta');
+
+    try {
+        const res = await fetchAuth(`${API_URL}/${recordatorioId}/historial`);
+        const data = await res.json();
+
+        if (!res.ok) {
+            cont.innerHTML = `<p class="texto-secundario">${data.error || 'No se pudo cargar el historial'}</p>`;
+            return;
+        }
+
+        if (data.historial.length === 0) {
+            cont.innerHTML = '<p class="texto-secundario">Todavía no hay confirmaciones registradas.</p>';
+            return;
+        }
+
+        cont.innerHTML = data.historial.map(h => `
+            <div class="item-historial">
+                ${h.foto ? `<img src="${h.foto}" alt="Confirmación" class="foto-historial">` : ''}
+                <span class="fecha-historial">${new Date(h.confirmado_en).toLocaleString()}</span>
+            </div>
+        `).join('');
+    } catch (error) {
+        cont.innerHTML = `<p class="texto-secundario">Error de conexion: ${error.message}</p>`;
+    }
+}
+
+document.getElementById('btnCerrarHistorial').addEventListener('click', () => {
+    modalHistorial.classList.add('oculta');
+});
 
 // ===================== PANEL TERAPEUTA =====================
 
