@@ -39,6 +39,82 @@ body.alarma-activa {
     height: 100%;
 }
 
+/* ===== DARK MODE ===== */
+
+[data-theme="dark"] {
+    --rosa: #1E1B2E;
+    --lavanda-fondo: #211F35;
+    --blanco: #2A2740;
+    --texto-oscuro: #F1EEFB;
+    --texto-secundario: #A9A3C4;
+    --borde: #3A375A;
+    --lavanda-blob: #4B4470;
+    --menta: #2C5346;
+    --sage: #3A4A2A;
+}
+
+[data-theme="dark"] body {
+    background: var(--rosa);
+}
+
+[data-theme="dark"] .pantalla {
+    background: #17151F;
+}
+
+[data-theme="dark"] .tarjeta-auth input,
+[data-theme="dark"] .tarjeta input,
+[data-theme="dark"] .tarjeta textarea,
+[data-theme="dark"] .tarjeta select,
+[data-theme="dark"] .modal-caja input,
+[data-theme="dark"] .item-historial {
+    background: #221F35;
+    color: var(--texto-oscuro);
+}
+
+[data-theme="dark"] .acciones button {
+    background: #322F4D;
+    color: var(--texto-oscuro);
+}
+
+[data-theme="dark"] .btn-borrar {
+    background: #4A2434 !important;
+    color: #F4A6C0 !important;
+}
+
+[data-theme="dark"] .badge-recurrencia {
+    background: #2C2A45;
+    color: #C6C4FF;
+}
+
+[data-theme="dark"] .blob {
+    opacity: 0.35;
+}
+
+/* ===== BOTON FLOTANTE DE CAMBIO DE TEMA ===== */
+
+.btn-toggle-tema {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: var(--blanco);
+    box-shadow: 0 8px 20px rgba(46, 43, 61, 0.18);
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+}
+
+.btn-toggle-tema:hover {
+    transform: scale(1.08);
+}
+
 /* ===== PANTALLAS DE AUTENTICACION (con blobs) ===== */
 
 .pantalla-blobs {

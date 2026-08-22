@@ -3,6 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            var t = localStorage.getItem('comfi_tema');
+            if (!t) {
+                t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <title>Read Me</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -234,6 +243,8 @@
             </form>
         </div>
     </div>
+
+    <button id="btnToggleTema" class="btn-toggle-tema" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
 
     <script src="app.js"></script>
 </body>

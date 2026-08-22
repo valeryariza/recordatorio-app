@@ -1,3 +1,24 @@
+// ===================== TEMA (CLARO/OSCURO) =====================
+
+function aplicarTema(tema) {
+    document.documentElement.setAttribute('data-theme', tema);
+    localStorage.setItem('comfi_tema', tema);
+    const btn = document.getElementById('btnToggleTema');
+    if (btn) btn.textContent = tema === 'dark' ? '☀️' : '🌙';
+}
+
+function iniciarTema() {
+    const actual = document.documentElement.getAttribute('data-theme') || 'light';
+    aplicarTema(actual);
+}
+
+document.getElementById('btnToggleTema')?.addEventListener('click', () => {
+    const actual = document.documentElement.getAttribute('data-theme');
+    aplicarTema(actual === 'dark' ? 'light' : 'dark');
+});
+
+iniciarTema();
+
 // ===================== NAVEGACION ENTRE PANTALLAS =====================
 
 const pantallas = {
