@@ -115,6 +115,75 @@ body.alarma-activa {
     transform: scale(1.08);
 }
 
+/* ===== ANIMACIONES ===== */
+
+@keyframes fade-in-pantalla {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.pantalla-entrando {
+    animation: fade-in-pantalla 0.25s ease;
+}
+
+@keyframes item-aparece {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#listaRecordatorios li,
+#listaRecordatoriosPaciente li,
+.tarjeta-paciente {
+    animation: item-aparece 0.3s ease both;
+}
+
+.btn-indigo:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.tarjeta-paciente,
+.btn-toggle-tema,
+.btn-indigo {
+    transition: transform 0.12s ease, background 0.15s ease;
+}
+
+/* ===== SPINNER DE CARGA ===== */
+
+.spinner-carga {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 30px 10px;
+    color: var(--texto-secundario);
+    font-size: 14px;
+}
+
+.spinner-circulo {
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--borde);
+    border-top-color: var(--indigo);
+    border-radius: 50%;
+    animation: girar 0.7s linear infinite;
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+.spinner-boton {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: girar 0.6s linear infinite;
+    margin-right: 8px;
+    vertical-align: -2px;
+}
+
 /* ===== PANTALLAS DE AUTENTICACION (con blobs) ===== */
 
 .pantalla-blobs {
@@ -284,6 +353,8 @@ body.alarma-activa {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .header-app h1 {
@@ -291,6 +362,18 @@ body.alarma-activa {
     font-weight: 600;
     font-size: 26px;
     color: var(--texto-oscuro);
+}
+
+@media (max-width: 380px) {
+    .header-app h1 {
+        font-size: 21px;
+    }
+    .btn-toggle-tema {
+        width: 42px;
+        height: 42px;
+        bottom: 14px;
+        right: 14px;
+    }
 }
 
 .tarjeta {

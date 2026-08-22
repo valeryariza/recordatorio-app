@@ -34,7 +34,11 @@ const pantallas = {
 
 function mostrarPantalla(nombre) {
     Object.values(pantallas).forEach(p => p.classList.add('oculta'));
-    pantallas[nombre].classList.remove('oculta');
+    const destino = pantallas[nombre];
+    destino.classList.remove('oculta');
+    destino.classList.remove('pantalla-entrando');
+    void destino.offsetWidth; // fuerza el reinicio de la animacion
+    destino.classList.add('pantalla-entrando');
 }
 
 document.querySelectorAll('[data-ir]').forEach(el => {
@@ -97,6 +101,19 @@ function iniciarSegunSesion() {
     }
 }
 
+// ===================== HELPER: ESTADO DE CARGA EN BOTONES =====================
+
+function ponerCargando(boton, textoCargando) {
+    boton.dataset.textoOriginal = boton.innerHTML;
+    boton.disabled = true;
+    boton.innerHTML = `<span class="spinner-boton"></span>${textoCargando}`;
+}
+
+function sacarCargando(boton) {
+    boton.disabled = false;
+    boton.innerHTML = boton.dataset.textoOriginal || boton.innerHTML;
+}
+
 // ===================== VERIFICACION DE EMAIL =====================
 
 let usuarioIdPendiente = null;
@@ -110,6 +127,8 @@ function irAVerificarEmail(usuarioId, email) {
 document.getElementById('formVerificarEmail').addEventListener('submit', async (e) => {
     e.preventDefault();
     const codigo = document.getElementById('codigoVerificacion').value.trim();
+    const btn = e.target.querySelector('button[type="submit"]');
+    ponerCargando(btn, 'Verificando...');
 
     try {
         const res = await fetch('/api/auth/verificar-email', {
@@ -128,6 +147,8 @@ document.getElementById('formVerificarEmail').addEventListener('submit', async (
         iniciarSegunSesion();
     } catch (error) {
         alert('Error de conexion: ' + error.message);
+    } finally {
+        sacarCargando(btn);
     }
 });
 
@@ -153,6 +174,8 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
+    const btn = e.target.querySelector('button[type="submit"]');
+    ponerCargando(btn, 'Ingresando...');
 
     try {
         const res = await fetch('/api/auth/login', {
@@ -175,6 +198,8 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
         iniciarSegunSesion();
     } catch (error) {
         alert('Error de conexion: ' + error.message);
+    } finally {
+        sacarCargando(btn);
     }
 });
 
@@ -185,6 +210,8 @@ document.getElementById('formRegistroPaciente').addEventListener('submit', async
     const nombre = document.getElementById('pacienteNombre').value;
     const email = document.getElementById('pacienteEmail').value;
     const password = document.getElementById('pacientePassword').value;
+    const btn = e.target.querySelector('button[type="submit"]');
+    ponerCargando(btn, 'Registrando...');
 
     try {
         const res = await fetch('/api/auth/registro-paciente', {
@@ -202,6 +229,8 @@ document.getElementById('formRegistroPaciente').addEventListener('submit', async
         irAVerificarEmail(data.usuarioId, data.email);
     } catch (error) {
         alert('Error de conexion: ' + error.message);
+    } finally {
+        sacarCargando(btn);
     }
 });
 
@@ -212,6 +241,8 @@ document.getElementById('formRegistroTerapeuta').addEventListener('submit', asyn
     const nombre = document.getElementById('terapeutaNombre').value;
     const email = document.getElementById('terapeutaEmail').value;
     const password = document.getElementById('terapeutaPassword').value;
+    const btn = e.target.querySelector('button[type="submit"]');
+    ponerCargando(btn, 'Registrando...');
 
     try {
         const res = await fetch('/api/auth/registro-terapeuta', {
@@ -229,6 +260,8 @@ document.getElementById('formRegistroTerapeuta').addEventListener('submit', asyn
         irAVerificarEmail(data.usuarioId, data.email);
     } catch (error) {
         alert('Error de conexion: ' + error.message);
+    } finally {
+        sacarCargando(btn);
     }
 });
 
@@ -245,9 +278,11 @@ document.getElementById('btnVolverDePerfil').addEventListener('click', () => {
 });
 
 async function cargarMisTerapeutas() {
+    const cont = document.getElementById('listaMisTerapeutas');
+    cont.innerHTML = '<div class="spinner-carga"><span class="spinner-circulo"></span> Cargando...</div>';
+
     const res = await fetchAuth('/api/perfil/mis-terapeutas');
     const terapeutas = await res.json();
-    const cont = document.getElementById('listaMisTerapeutas');
 
     if (terapeutas.length === 0) {
         cont.innerHTML = '<p class="texto-secundario">Todavía no estás vinculado a ningún terapeuta.</p>';
@@ -265,6 +300,8 @@ async function cargarMisTerapeutas() {
 document.getElementById('formVincularTerapeuta').addEventListener('submit', async (e) => {
     e.preventDefault();
     const codigo = document.getElementById('codigoTerapeuta').value;
+    const btn = e.target.querySelector('button[type="submit"]');
+    ponerCargando(btn, 'Vinculando...');
 
     try {
         const res = await fetchAuth('/api/perfil/vincular-terapeuta', {
@@ -283,6 +320,8 @@ document.getElementById('formVincularTerapeuta').addEventListener('submit', asyn
         cargarMisTerapeutas();
     } catch (error) {
         alert('Error de conexion: ' + error.message);
+    } finally {
+        sacarCargando(btn);
     }
 });
 
@@ -572,9 +611,15 @@ const form = document.getElementById('formRecordatorio');
 const lista = document.getElementById('listaRecordatorios');
 
 async function cargarRecordatorios() {
+    lista.innerHTML = '<div class="spinner-carga"><span class="spinner-circulo"></span> Cargando recordatorios...</div>';
     const res = await fetchAuth(API_URL);
     const recordatorios = await res.json();
     lista.innerHTML = '';
+
+    if (recordatorios.length === 0) {
+        lista.innerHTML = '<p class="texto-secundario">Todavía no tenés recordatorios. ¡Agregá el primero arriba!</p>';
+        return;
+    }
 
     recordatorios.forEach(r => {
         const li = document.createElement('li');
@@ -654,7 +699,7 @@ const modalHistorial = document.getElementById('modalHistorial');
 async function verHistorial(recordatorioId, titulo) {
     document.getElementById('historialTitulo').textContent = `Historial: ${titulo}`;
     const cont = document.getElementById('listaHistorial');
-    cont.innerHTML = '<p class="texto-secundario">Cargando...</p>';
+    cont.innerHTML = '<div class="spinner-carga"><span class="spinner-circulo"></span> Cargando...</div>';
     modalHistorial.classList.remove('oculta');
 
     try {
@@ -692,12 +737,14 @@ const listaPacientesEl = document.getElementById('listaPacientes');
 const detallePacienteEl = document.getElementById('detallePaciente');
 
 async function cargarPacientes() {
+    listaPacientesEl.innerHTML = '<div class="spinner-carga"><span class="spinner-circulo"></span> Cargando pacientes...</div>';
+    detallePacienteEl.classList.add('oculta');
+    listaPacientesEl.classList.remove('oculta');
+
     const res = await fetchAuth('/api/terapeuta/pacientes');
     const pacientes = await res.json();
 
     listaPacientesEl.innerHTML = '';
-    detallePacienteEl.classList.add('oculta');
-    listaPacientesEl.classList.remove('oculta');
 
     if (pacientes.length === 0) {
         listaPacientesEl.innerHTML = '<p class="texto-secundario">Todavia no tenes pacientes vinculados. Compartile el codigo de arriba a tu primer paciente.</p>';
@@ -743,13 +790,19 @@ async function verRecordatoriosPaciente(pacienteId, nombre) {
 
 document.getElementById('btnVolverPacientes').addEventListener('click', cargarPacientes);
 
-document.getElementById('btnGenerarCodigo').addEventListener('click', async () => {
-    const res = await fetchAuth('/api/terapeuta/codigo-invitacion', { method: 'POST' });
-    const data = await res.json();
-    if (res.ok) {
-        document.getElementById('codigoGenerado').textContent = data.codigo;
-    } else {
-        alert(data.error || 'No se pudo generar el codigo');
+document.getElementById('btnGenerarCodigo').addEventListener('click', async (e) => {
+    const btn = e.target;
+    ponerCargando(btn, 'Generando...');
+    try {
+        const res = await fetchAuth('/api/terapeuta/codigo-invitacion', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('codigoGenerado').textContent = data.codigo;
+        } else {
+            alert(data.error || 'No se pudo generar el codigo');
+        }
+    } finally {
+        sacarCargando(btn);
     }
 });
 
